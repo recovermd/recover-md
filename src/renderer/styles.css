@@ -1,0 +1,183 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Theme tokens. Light and dark are both first-class (§22): the app follows the system
+ * preference unless the user pins a theme in settings.
+ */
+:root {
+  --rmd-surface: 255 255 255;
+  --rmd-panel: 247 248 250;
+  --rmd-edge: 223 226 232;
+  --rmd-ink: 24 27 33;
+  --rmd-muted: 104 112 126;
+  --rmd-accent: 47 106 217;
+
+  --rmd-added-bg: 226 246 232;
+  --rmd-added-ink: 22 101 52;
+  --rmd-removed-bg: 253 232 232;
+  --rmd-removed-ink: 146 27 27;
+
+  color-scheme: light;
+}
+
+html.dark {
+  --rmd-surface: 15 17 21;
+  --rmd-panel: 20 23 29;
+  --rmd-edge: 42 47 57;
+  --rmd-ink: 232 236 243;
+  --rmd-muted: 143 152 168;
+  --rmd-accent: 116 163 255;
+
+  --rmd-added-bg: 20 51 34;
+  --rmd-added-ink: 152 224 178;
+  --rmd-removed-bg: 61 25 28;
+  --rmd-removed-ink: 246 165 165;
+
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: rgb(var(--rmd-surface));
+  color: rgb(var(--rmd-ink));
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Visible focus everywhere (§22). */
+:focus-visible {
+  outline: 2px solid rgb(var(--rmd-accent));
+  outline-offset: 1px;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--rmd-edge));
+  border-radius: 5px;
+}
+
+.diff-added {
+  background: rgb(var(--rmd-added-bg));
+  color: rgb(var(--rmd-added-ink));
+}
+.diff-removed {
+  background: rgb(var(--rmd-removed-bg));
+  color: rgb(var(--rmd-removed-ink));
+}
+
+/* Markdown preview typography. */
+.markdown-body {
+  line-height: 1.65;
+  font-size: 14px;
+}
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+  font-weight: 650;
+  line-height: 1.3;
+  margin: 1.4em 0 0.6em;
+}
+.markdown-body h1 {
+  font-size: 1.7em;
+}
+.markdown-body h2 {
+  font-size: 1.35em;
+}
+.markdown-body h3 {
+  font-size: 1.15em;
+}
+.markdown-body p,
+.markdown-body ul,
+.markdown-body ol,
+.markdown-body blockquote,
+.markdown-body pre,
+.markdown-body table {
+  margin: 0.75em 0;
+}
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 1.5em;
+}
+.markdown-body ul {
+  list-style: disc;
+}
+.markdown-body ol {
+  list-style: decimal;
+}
+.markdown-body code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  background: rgb(var(--rmd-panel));
+  border: 1px solid rgb(var(--rmd-edge));
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+.markdown-body pre {
+  background: rgb(var(--rmd-panel));
+  border: 1px solid rgb(var(--rmd-edge));
+  border-radius: 6px;
+  padding: 0.8em 1em;
+  overflow-x: auto;
+}
+.markdown-body pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+.markdown-body blockquote {
+  border-left: 3px solid rgb(var(--rmd-edge));
+  padding-left: 1em;
+  color: rgb(var(--rmd-muted));
+}
+.markdown-body a {
+  color: rgb(var(--rmd-accent));
+  text-decoration: underline;
+}
+.markdown-body table {
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+}
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid rgb(var(--rmd-edge));
+  padding: 0.4em 0.7em;
+}
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid rgb(var(--rmd-edge));
+  margin: 1.5em 0;
+}
+.markdown-body img {
+  max-width: 100%;
+}
+.markdown-body .rmd-blocked-embed {
+  display: inline-block;
+  border: 1px dashed rgb(var(--rmd-edge));
+  color: rgb(var(--rmd-muted));
+  border-radius: 4px;
+  padding: 0.15em 0.5em;
+  font-size: 0.9em;
+}
+
+mark {
+  background: rgb(var(--rmd-accent) / 0.25);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
+}

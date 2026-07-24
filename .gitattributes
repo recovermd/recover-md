@@ -1,0 +1,6 @@
+# Normalise text to LF in the repository. This project is developed on both Windows and
+# macOS, and without this every cross-platform edit shows up as a whole-file diff.
+* text=auto eol=lf
+
+# Icons are generated PNGs; never let them through line-ending conversion.
+*.png binary
