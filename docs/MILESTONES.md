@@ -13,7 +13,16 @@ Against the implementation plan in §26 of the PRD.
 | 7 | Restore and recovery | Complete | Preflight, conflict detection, pre-restore capture, atomic replacement, restore events, deleted-file recovery with occupied-path handling |
 | 8 | Historical search | Complete | FTS5 across current and historical content, filenames and paths, grouping, snippets, highlighting, scope filters, index rebuild |
 | 9 | Background runtime and resilience | Complete | Tray with status, launch at login, pause/resume, health diagnostics, watcher restart with backoff, disk-full pause, database safe mode, backup restore, storage usage |
-| 10 | Packaging and release validation | Partial | `electron-builder` configured for NSIS and dmg/zip with icons and asar unpacking; installers have not been produced, signed, or clean-install tested, and macOS has not been exercised |
+| 10 | Packaging and release validation | Partial | `electron-builder` configured for NSIS and dmg/zip with icons and asar unpacking; installers have not been produced, signed, or clean-install tested, and the app itself has only been run on Windows |
+
+## Platform coverage
+
+CI runs `typecheck`, `lint`, the full test suite and the production build on
+**windows-latest, macos-latest and ubuntu-latest** for every push, as §25 requires. All 119
+tests pass on all three. This matters more than a normal build matrix here: macOS reports
+real inodes, so rename detection takes its filesystem-identity path there rather than the
+content-hash fallback used on Windows, and Linux is the one platform where path identity is
+case-sensitive.
 
 ## Acceptance criteria
 

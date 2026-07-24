@@ -41,9 +41,10 @@ Recorded honestly so nobody has to discover these the hard way.
 - **End-to-end UI automation** (Playwright/`electron` driver, §25) is not implemented. UI
   behaviour was verified manually and through a renderer smoke harness; the main-process
   pipeline is covered by integration tests that use the real filesystem and database.
-- **macOS** has not been exercised: this build was developed and tested on Windows 11. The
-  platform-specific paths (case-insensitive path identity, inode-based rename detection,
-  menu-bar behaviour) are implemented but need a run on macOS before release, as §25
-  requires.
+- **The macOS application has not been run.** CI does execute the full automated suite and
+  the production build on macOS, Windows and Linux, so the capture pipeline, rename
+  correlation, restore and search are verified on all three. What remains unverified on
+  macOS is everything CI cannot exercise headlessly: the menu-bar item, the folder picker,
+  launch-at-login, window behaviour and the packaged `.dmg`.
 - **Signed installers** are not produced; `electron-builder` configuration exists but no
   code-signing identity is configured.
