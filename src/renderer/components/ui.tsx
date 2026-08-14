@@ -14,12 +14,13 @@ export function Button({
   variant?: 'default' | 'primary' | 'ghost' | 'danger';
 }): React.JSX.Element {
   const base =
-    'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[12px] font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+    'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
   const styles = {
     default: 'border border-edge bg-panel text-ink hover:bg-edge/40',
-    primary: 'bg-accent text-white hover:opacity-90',
+    primary: 'bg-accent text-[rgb(var(--rmd-on-accent))] hover:opacity-90',
     ghost: 'text-muted hover:text-ink hover:bg-panel',
-    danger: 'border border-edge text-[rgb(var(--rmd-removed-ink))] hover:bg-[rgb(var(--rmd-removed-bg))]'
+    danger:
+      'border border-edge text-[rgb(var(--rmd-removed-ink))] hover:bg-[rgb(var(--rmd-removed-bg))]'
   }[variant];
   return (
     <button className={cx(base, styles, className)} {...props}>
@@ -40,7 +41,7 @@ export function Segmented<T extends string>({
   ariaLabel: string;
 }): React.JSX.Element {
   return (
-    <div role="tablist" aria-label={ariaLabel} className="inline-flex rounded-md border border-edge bg-panel p-0.5">
+    <div role="tablist" aria-label={ariaLabel} className="inline-flex rounded-full border border-edge bg-surface p-0.5">
       {options.map((option) => (
         <button
           key={option.value}
@@ -49,8 +50,8 @@ export function Segmented<T extends string>({
           aria-selected={value === option.value}
           onClick={() => onChange(option.value)}
           className={cx(
-            'rounded px-2.5 py-1 text-[12px] font-medium transition-colors',
-            value === option.value ? 'bg-surface text-ink shadow-sm' : 'text-muted hover:text-ink'
+            'rounded-full px-2.5 py-1 text-[12px] font-medium transition-colors',
+            value === option.value ? 'bg-accent text-[rgb(var(--rmd-on-accent))]' : 'text-muted hover:text-ink'
           )}
         >
           {option.label}
@@ -70,10 +71,12 @@ export function EmptyState({
   action?: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-2 p-8 text-center">
-      <p className="text-[13px] font-medium text-ink">{title}</p>
-      {description ? <p className="max-w-sm text-[12px] leading-relaxed text-muted">{description}</p> : null}
-      {action ? <div className="mt-2">{action}</div> : null}
+    <div className="flex h-full flex-col items-center justify-center gap-2 p-10 text-center">
+      <p className="font-display max-w-md text-[22px] font-medium leading-snug tracking-tight text-ink">{title}</p>
+      {description ? (
+        <p className="max-w-sm text-[13px] leading-relaxed text-muted">{description}</p>
+      ) : null}
+      {action ? <div className="mt-3">{action}</div> : null}
     </div>
   );
 }
@@ -92,7 +95,7 @@ export function Badge({
     accent: 'border-transparent bg-accent/15 text-accent'
   }[tone];
   return (
-    <span className={cx('rounded border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide', styles)}>
+    <span className={cx('rounded-full border px-1.5 py-0.5 text-[10px] font-medium tracking-wide', styles)}>
       {children}
     </span>
   );
@@ -111,7 +114,7 @@ export function Modal({
 }): React.JSX.Element {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/35 p-6"
       role="dialog"
       aria-modal="true"
       aria-label={title}
@@ -119,12 +122,12 @@ export function Modal({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-lg rounded-lg border border-edge bg-surface shadow-2xl">
-        <header className="border-b border-edge px-4 py-3">
-          <h2 className="text-[13px] font-semibold">{title}</h2>
+      <div className="w-full max-w-lg rounded-xl border border-edge bg-surface">
+        <header className="border-b border-edge px-5 py-3.5">
+          <h2 className="font-display text-[18px] font-medium tracking-tight">{title}</h2>
         </header>
-        <div className="px-4 py-3 text-[12px] leading-relaxed text-ink">{children}</div>
-        {footer ? <footer className="flex justify-end gap-2 border-t border-edge px-4 py-3">{footer}</footer> : null}
+        <div className="px-5 py-4 text-[13px] leading-relaxed text-ink">{children}</div>
+        {footer ? <footer className="flex justify-end gap-2 border-t border-edge px-5 py-3">{footer}</footer> : null}
       </div>
     </div>
   );

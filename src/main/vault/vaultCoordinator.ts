@@ -35,6 +35,7 @@ import {
   toNormalizedPath
 } from './paths';
 import { WatcherService } from '../watcher/watcherService';
+import { VaultTimers } from './vaultTimers';
 
 export interface EventSink {
   emit<E extends EventName>(event: E, payload: EventMap[E]): void;
@@ -60,8 +61,7 @@ export class VaultCoordinator {
   private correlator = new RenameCorrelator();
   private ignoreMatcher: IgnoreMatcher;
   private indexProgress: IndexProgress | null = null;
-  private periodicTimer: NodeJS.Timeout | null = null;
-  private backupTimer: NodeJS.Timeout | null = null;
+  private readonly timers = new VaultTimers();
   private capturesBlocked = false;
   private stopping = false;
   private reconciling = false;
@@ -86,7 +86,8 @@ export class VaultCoordinator {
       trackingState: this.state,
       indexProgress: this.indexProgress,
       safeMode: this.options.store.safeMode,
-      pendingCaptures: this.queue?.pendingCount ?? 0
+      pendingCaptures: this.queue?.pendingCount ?? 0,
+      activeFileCount: this.vault ? this.options.store.files.activeCount(this.vault.id) : 0
     };
   }
 
@@ -99,12 +100,12 @@ export class VaultCoordinator {
     this.options.events.emit('trackingStateChanged', { state });
 
     if (state === 'paused') {
-      this.options.health.raise('tracking_paused', 'warning', 'Tracking is paused. Changes are not being recorded.');
+      this.options.health.raise('tracking_paused', 'warning', 'Watching is paused. Changes are not being recorded.');
     } else {
       this.options.health.clear('tracking_paused');
     }
     if (state === 'stopped') {
-      this.options.health.raise('tracking_stopped', 'error', 'Tracking is stopped. Changes are not being recorded.');
+      this.options.health.raise('tracking_stopped', 'error', 'Recover.MD is not protecting this folder. Changes are not being recorded.');
     } else {
       this.options.health.clear('tracking_stopped');
     }
@@ -276,32 +277,23 @@ export class VaultCoordinator {
   }
 
   private startTimers(_snapshotDelayMs: number): void {
-    this.stopTimers();
-    this.periodicTimer = setInterval(() => {
-      void this.reconcile('periodic_reconciliation');
-      void this.checkDiskSpace();
-    }, PERIODIC_RECONCILE_INTERVAL_MS);
-    this.periodicTimer.unref?.();
-
-    // At least one automatic backup per day while running (§19.1).
-    this.backupTimer = setInterval(
-      () => {
+    this.timers.start(PERIODIC_RECONCILE_INTERVAL_MS, 24 * 60 * 60 * 1000, {
+      onPeriodic: () => {
+        void this.reconcile('periodic_reconciliation');
+        void this.checkDiskSpace();
+      },
+      onBackup: () => {
         void this.options.store.backup('daily').catch((error) => {
           this.options.logger.warn('Automatic backup failed', {
             error: error instanceof Error ? error.message : String(error)
           });
         });
-      },
-      24 * 60 * 60 * 1000
-    );
-    this.backupTimer.unref?.();
+      }
+    });
   }
 
   private stopTimers(): void {
-    if (this.periodicTimer) clearInterval(this.periodicTimer);
-    if (this.backupTimer) clearInterval(this.backupTimer);
-    this.periodicTimer = null;
-    this.backupTimer = null;
+    this.timers.stop();
   }
 
   async pauseTracking(): Promise<VaultStatus> {

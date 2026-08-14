@@ -80,7 +80,7 @@ export function App(): React.JSX.Element {
   }, []);
 
   return (
-    <div className="flex h-full flex-col bg-surface text-ink">
+    <div className="flex h-full flex-col bg-surface font-sans text-ink">
       <TopBar searchRef={searchRef} />
       <HealthBanner />
       {error ? (

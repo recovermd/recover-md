@@ -107,7 +107,7 @@ export function SettingsPanel(): React.JSX.Element | null {
 
         <section className="flex flex-wrap gap-2">
           <Button onClick={() => void pauseOrResume()}>
-            {status?.trackingState === 'paused' ? 'Resume tracking' : 'Pause tracking'}
+            {status?.trackingState === 'paused' ? 'Resume watching' : 'Pause watching'}
           </Button>
           <Button onClick={() => void rescan()}>Rescan vault</Button>
           <Button onClick={() => void rebuild()}>Rebuild search index</Button>
@@ -115,8 +115,8 @@ export function SettingsPanel(): React.JSX.Element | null {
           <Button onClick={() => void call('app:openLogsFolder')}>Open logs folder</Button>
         </section>
         {status?.trackingState === 'paused' ? (
-          <p className="rounded border border-edge bg-amber-500/15 p-2 text-[11px]">
-            Tracking is paused. Changes to your files are not being recorded.
+          <p className="rounded border border-edge bg-amber-700/15 p-2 text-[11px]">
+            Watching is paused. Changes to your files are not being recorded.
           </p>
         ) : null}
 

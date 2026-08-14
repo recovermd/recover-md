@@ -13,7 +13,9 @@ export default {
         accent: 'rgb(var(--rmd-accent) / <alpha-value>)'
       },
       fontFamily: {
-        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace']
+        sans: ['Atkinson Hyperlegible', 'Segoe UI', 'sans-serif'],
+        display: ['Fraunces Variable', 'Fraunces', 'Times New Roman', 'serif'],
+        mono: ['IBM Plex Mono', 'ui-monospace', 'Menlo', 'Consolas', 'monospace']
       }
     }
   },

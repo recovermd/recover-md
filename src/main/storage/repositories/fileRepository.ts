@@ -190,4 +190,13 @@ export class FileRepository {
       vaultId
     ])?.n ?? 0;
   }
+
+  activeCount(vaultId: string): number {
+    return (
+      this.db.get<{ n: number }>(
+        "SELECT COUNT(*) AS n FROM files WHERE vault_id = ? AND status = 'active'",
+        [vaultId]
+      )?.n ?? 0
+    );
+  }
 }

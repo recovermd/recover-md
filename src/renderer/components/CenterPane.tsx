@@ -1,7 +1,7 @@
 /** Centre pane: Markdown preview, raw source and diff (FR-6, §21). */
 import React from 'react';
 import { renderMarkdown } from '../lib/markdown';
-import { formatAbsolute, formatBytes } from '../lib/format';
+import { formatAbsolute, formatBytes, fileName, parentPath } from '../lib/format';
 import { useAppStore } from '../state/appStore';
 import { AutoHeight, Badge, Button, EmptyState, Segmented, VirtualList } from './ui';
 import { DiffView } from './DiffView';
@@ -19,6 +19,7 @@ export function CenterPane(): React.JSX.Element {
   const diffLoading = useAppStore((state) => state.diffLoading);
   const status = useAppStore((state) => state.status);
   const selectVault = useAppStore((state) => state.selectVault);
+  const timeline = useAppStore((state) => state.timeline);
 
   if (!status?.vault) {
     return (
@@ -26,7 +27,11 @@ export function CenterPane(): React.JSX.Element {
         <EmptyState
           title="Choose the folder Recover.MD should protect"
           description="Everything stays on this machine. History starts when you select the folder — versions from before that are not available."
-          action={<Button variant="primary" onClick={() => void selectVault()}>Select folder…</Button>}
+          action={
+            <Button variant="primary" onClick={() => void selectVault()}>
+              Select folder…
+            </Button>
+          }
         />
       </section>
     );
@@ -35,24 +40,34 @@ export function CenterPane(): React.JSX.Element {
   if (!selectedFile) {
     return (
       <section className="flex-1">
-        <EmptyState title="No file selected" description="Pick a file to see its history." />
+        <EmptyState title="Pick a file" description="Its captured states appear here, ready to restore." />
       </section>
     );
   }
 
   const showing = selectedVersionId ? versionContent : currentContent;
   const isHistorical = Boolean(selectedVersionId);
+  const selectedEntry = timeline.flatMap((group) => group.entries).find((entry) => entry.id === selectedVersionId);
+  const parent = parentPath(selectedFile.currentPath);
 
   return (
-    <section className="flex min-w-0 flex-1 flex-col">
-      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-edge px-3 py-2">
+    <section className="flex min-w-0 flex-1 flex-col bg-surface">
+      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-edge px-5 py-3">
         <div className="min-w-0">
-          <p className="truncate text-[13px] font-medium" title={selectedFile.currentPath}>
-            {selectedFile.currentPath}
+          <p className="truncate font-mono text-[11px] text-muted" title={selectedFile.currentPath}>
+            {parent ? `${parent} / ` : ''}
+            <span className="text-ink">{fileName(selectedFile.currentPath)}</span>
           </p>
-          <p className="flex items-center gap-2 text-[11px] text-muted">
-            {isHistorical ? <Badge tone="accent">historical version</Badge> : <Badge>current file</Badge>}
+          <p className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted">
+            {isHistorical ? (
+              <Badge tone="accent">historical</Badge>
+            ) : (
+              <Badge tone="positive">current file</Badge>
+            )}
             {selectedFile.status === 'deleted' ? <Badge tone="negative">deleted from disk</Badge> : null}
+            {selectedEntry ? (
+              <span title={formatAbsolute(selectedEntry.capturedAt)}>{formatAbsolute(selectedEntry.capturedAt)}</span>
+            ) : null}
             {showing ? <span>{formatBytes(showing.byteSize)}</span> : null}
             {showing?.hasBom ? <span>UTF-8 BOM</span> : null}
             {showing && !showing.encodingSupported ? <span>not valid UTF-8</span> : null}
@@ -115,9 +130,8 @@ export function CenterPane(): React.JSX.Element {
 function MarkdownPreview({ source }: { source: string }): React.JSX.Element {
   const html = React.useMemo(() => renderMarkdown(source), [source]);
   return (
-    <div className="h-full overflow-auto px-8 py-6">
-      {/* Sanitized in renderMarkdown: no scripts, no remote loads (§20). */}
-      <article className="markdown-body mx-auto max-w-3xl" dangerouslySetInnerHTML={{ __html: html }} />
+    <div className="h-full overflow-auto px-10 py-8">
+      <article className="markdown-body mx-auto max-w-2xl" dangerouslySetInnerHTML={{ __html: html }} />
     </div>
   );
 }
@@ -132,7 +146,7 @@ function SourceView({ text }: { text: string }): React.JSX.Element {
           items={lines}
           rowHeight={20}
           height={height}
-          className="px-3 py-2 font-mono text-[12px]"
+          className="px-4 py-3 font-mono text-[12px]"
           renderRow={(line, index) => (
             <div key={index} className="flex h-5 items-center whitespace-pre">
               <span className="w-12 shrink-0 select-none pr-3 text-right text-[11px] text-muted">
@@ -145,8 +159,4 @@ function SourceView({ text }: { text: string }): React.JSX.Element {
       )}
     </AutoHeight>
   );
-}
-
-export function VersionMetaLine({ capturedAt }: { capturedAt: number }): React.JSX.Element {
-  return <span title={formatAbsolute(capturedAt)}>{formatAbsolute(capturedAt)}</span>;
 }

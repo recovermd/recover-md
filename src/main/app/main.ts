@@ -15,8 +15,10 @@ import { HistoryService } from '../history/historyService';
 import { createRouter } from '../ipc/router';
 import { createLogger } from '../logging/logger';
 import { DiffWorkerClient } from '../diff/diffWorkerClient';
+import { CatalogService } from '../files/catalogService';
 import { RestoreService } from '../restore/restoreService';
 import { SearchService } from '../search/searchService';
+import { SettingsService } from '../settings/settingsService';
 import { Store } from '../storage/store';
 import { VaultCoordinator } from '../vault/vaultCoordinator';
 import { WindowManager, resolveAppPath, resolveUnpackedPath } from './windows';
@@ -89,6 +91,7 @@ async function start(): Promise<void> {
         : coordinator.pauseTracking());
     },
     getTrackingState: () => coordinator.trackingState,
+    getActiveFileCount: () => coordinator.status().activeFileCount,
     openLogsFolder: () => void shell.openPath(logsDir),
     openDataFolder: () => void shell.openPath(dataDir)
   });
@@ -134,8 +137,18 @@ async function start(): Promise<void> {
 
   health.onChange((status) => broadcast('healthChanged', status));
 
+  const catalog = new CatalogService(store, () => coordinator.currentVault?.id ?? null);
+  const settings = new SettingsService(store, {
+    onIgnorePatternsChanged: () => coordinator.onSettingsChanged(),
+    applyLaunchAtLogin: (enabled) => {
+      if (isDevelopment) return;
+      app.setLoginItemSettings({ openAtLogin: enabled, openAsHidden: true });
+    }
+  });
+
   const router = createRouter({
-    store,
+    catalog,
+    settings,
     coordinator,
     history,
     search,
@@ -151,10 +164,6 @@ async function start(): Promise<void> {
           })
         : await dialog.showOpenDialog({ properties: ['openDirectory'] });
       return result.canceled ? null : (result.filePaths[0] ?? null);
-    },
-    applyLaunchAtLogin: (enabled) => {
-      if (isDevelopment) return;
-      app.setLoginItemSettings({ openAtLogin: enabled, openAsHidden: true });
     },
     openFolder: (which) => {
       void shell.openPath(which === 'logs' ? logsDir : dataDir);

@@ -14,16 +14,18 @@ import type {
   VaultStatus
 } from '@shared/types/domain';
 import type { DiffRequest, ListFilesRequest, TimelineRequest } from '@shared/contracts/ipc';
+import type { CatalogService } from '../files/catalogService';
 import type { HistoryService } from '../history/historyService';
 import type { HealthMonitor } from '../health/healthMonitor';
 import type { Logger } from '../logging/logger';
 import type { RestoreService } from '../restore/restoreService';
 import type { SearchService } from '../search/searchService';
-import type { Store } from '../storage/store';
+import type { SettingsService } from '../settings/settingsService';
 import type { VaultCoordinator } from '../vault/vaultCoordinator';
 
 export interface RouterDependencies {
-  store: Store;
+  catalog: CatalogService;
+  settings: SettingsService;
   coordinator: VaultCoordinator;
   history: HistoryService;
   search: SearchService;
@@ -32,8 +34,6 @@ export interface RouterDependencies {
   logger: Logger;
   /** Opens the OS folder picker; returns null when the user cancels. */
   selectFolder: () => Promise<string | null>;
-  /** Applies the launch-at-login preference to the OS. */
-  applyLaunchAtLogin: (enabled: boolean) => void;
   /** Reveals a local folder in the OS file manager (FR-11). */
   openFolder: (which: 'data' | 'logs') => void;
 }
@@ -54,12 +54,7 @@ export function createRouter(deps: RouterDependencies): RouterHandler {
     'vault:rescan': () => deps.coordinator.rescan(),
     'version:restore': (request: RestoreRequest) => deps.restore.restore(request),
     'file:recoverDeleted': (request: RecoverRequest) => deps.restore.recoverDeleted(request),
-    'settings:update': (patch: Partial<AppSettings>): AppSettings => {
-      const updated = deps.store.settings.update(patch);
-      if (patch.ignorePatterns !== undefined) deps.coordinator.onSettingsChanged();
-      if (patch.launchAtLogin !== undefined) deps.applyLaunchAtLogin(updated.launchAtLogin);
-      return updated;
-    },
+    'settings:update': (patch: Partial<AppSettings>): AppSettings => deps.settings.update(patch),
     'search:rebuildIndex': async () => {
       const result = await deps.search.rebuildIndex();
       deps.health.clear('search_index_stale');
@@ -76,18 +71,8 @@ export function createRouter(deps: RouterDependencies): RouterHandler {
 
     // -------------------------------------------------------------- queries
     'vault:status': () => deps.coordinator.status(),
-    'file:list': (request: ListFilesRequest) => {
-      const vault = deps.coordinator.currentVault;
-      if (!vault) return [];
-      return deps.store.files.list(
-        vault.id,
-        request.filter,
-        request.query,
-        request.limit ?? 500,
-        request.offset ?? 0
-      );
-    },
-    'file:get': (request: { fileId: string }) => deps.store.files.byId(request.fileId),
+    'file:list': (request: ListFilesRequest) => deps.catalog.list(request),
+    'file:get': (request: { fileId: string }) => deps.catalog.byId(request.fileId),
     'file:currentContent': (request: { fileId: string }) =>
       deps.history.getCurrentContent(request.fileId),
     'timeline:get': (request: TimelineRequest) =>
@@ -98,11 +83,8 @@ export function createRouter(deps: RouterDependencies): RouterHandler {
     'search:versions': (query: SearchQuery) => deps.search.search(query),
     'storage:usage': () => deps.history.getStorageUsage(),
     'health:status': () => deps.health.status(),
-    'health:skippedFiles': () => {
-      const vault = deps.coordinator.currentVault;
-      return vault ? deps.store.skipped.list(vault.id) : [];
-    },
-    'settings:get': () => deps.store.settings.get()
+    'health:skippedFiles': () => deps.catalog.skipped(),
+    'settings:get': () => deps.settings.get()
   };
 
   return async (channel: string, payload: unknown): Promise<IpcResult<unknown>> => {

@@ -11,8 +11,8 @@ export function LeftPane(): React.JSX.Element {
   const setLeftView = useAppStore((state) => state.setLeftView);
 
   return (
-    <aside className="flex h-full w-[300px] shrink-0 flex-col border-r border-edge bg-panel">
-      <div className="flex items-center gap-2 border-b border-edge px-2 py-2">
+    <aside className="flex h-full w-[280px] shrink-0 flex-col border-r border-edge bg-panel">
+      <div className="flex items-center gap-2 border-b border-edge px-3 py-2.5">
         <Segmented
           ariaLabel="Left pane view"
           value={leftView}
@@ -41,18 +41,18 @@ function FileList(): React.JSX.Element {
 
   return (
     <>
-      <div className="border-b border-edge p-2">
+      <div className="border-b border-edge p-3">
         <input
           value={filterText}
           onChange={(event) => setFilterText(event.target.value)}
           placeholder="Filter by path…"
           aria-label="Filter files by path"
-          className="w-full rounded border border-edge bg-surface px-2 py-1 text-[12px] outline-none placeholder:text-muted"
+          className="w-full rounded-md border border-edge bg-surface px-2.5 py-1.5 text-[12px] outline-none placeholder:text-muted"
         />
       </div>
       <div className="flex-1 overflow-auto">
         {!status?.vault ? (
-          <EmptyState title="No vault selected" description="Choose a folder to start recording history." />
+          <EmptyState title="No folder yet" description="Choose a folder to start recording history." />
         ) : loading && files.length === 0 ? (
           <EmptyState title="Loading…" />
         ) : files.length === 0 ? (
@@ -69,6 +69,7 @@ function FileList(): React.JSX.Element {
             {files.map((file) => {
               const selected = file.id === selectedFileId;
               const parent = parentPath(file.currentPath);
+              const deleted = file.status === 'deleted';
               return (
                 <li key={file.id}>
                   <button
@@ -76,19 +77,25 @@ function FileList(): React.JSX.Element {
                     aria-selected={selected}
                     onClick={() => void selectFile(file.id)}
                     className={cx(
-                      'flex w-full flex-col items-start gap-0.5 border-l-2 px-3 py-1.5 text-left transition-colors',
-                      selected
-                        ? 'border-accent bg-surface'
-                        : 'border-transparent hover:bg-surface/60'
+                      'flex w-full flex-col items-start gap-0.5 px-3 py-2 text-left transition-colors',
+                      selected ? 'bg-accent/15' : 'hover:bg-surface/70'
                     )}
                   >
                     <span className="flex w-full items-center gap-2">
-                      <span className="truncate text-[12px] font-medium">{fileName(file.currentPath)}</span>
-                      {file.status === 'deleted' ? <Badge tone="negative">deleted</Badge> : null}
+                      <span
+                        className={cx(
+                          'truncate text-[13px] font-medium',
+                          deleted && 'text-[rgb(var(--rmd-removed-ink))] line-through decoration-[1.5px]'
+                        )}
+                      >
+                        {fileName(file.currentPath)}
+                      </span>
                     </span>
-                    <span className="flex w-full items-center justify-between gap-2 text-[11px] text-muted">
+                    <span className="flex w-full items-center justify-between gap-2 font-mono text-[10px] text-muted">
                       <span className="truncate">{parent || '/'}</span>
-                      <span className="shrink-0">{file.versionCount} versions</span>
+                      <span className="shrink-0">
+                        {file.versionCount} {file.versionCount === 1 ? 'version' : 'versions'}
+                      </span>
                     </span>
                   </button>
                 </li>
@@ -120,15 +127,15 @@ function SearchResultsList(): React.JSX.Element {
 
   return (
     <>
-      <div className="flex flex-wrap gap-1 border-b border-edge p-2">
+      <div className="flex flex-wrap gap-1 border-b border-edge p-3">
         {scopes.map((option) => (
           <button
             key={option.value}
             onClick={() => void setScope(option.value)}
             aria-pressed={scope === option.value}
             className={cx(
-              'rounded border px-2 py-0.5 text-[11px]',
-              scope === option.value ? 'border-accent text-accent' : 'border-edge text-muted hover:text-ink'
+              'rounded-full border px-2.5 py-0.5 text-[11px]',
+              scope === option.value ? 'border-accent bg-accent/10 text-accent' : 'border-edge text-muted hover:text-ink'
             )}
           >
             {option.label}
@@ -145,20 +152,27 @@ function SearchResultsList(): React.JSX.Element {
         ) : (
           <ul>
             {results.groups.map((group) => (
-              <li key={group.fileId} className="border-b border-edge/60 px-3 py-2">
+              <li key={group.fileId} className="border-b border-edge/60 px-3 py-2.5">
                 <div className="flex items-center gap-2">
-                  <span className="truncate text-[12px] font-medium">{fileName(group.currentPath)}</span>
-                  {group.fileStatus === 'deleted' ? <Badge tone="negative">deleted</Badge> : null}
+                  <span
+                    className={cx(
+                      'truncate text-[13px] font-medium',
+                      group.fileStatus === 'deleted' &&
+                        'text-[rgb(var(--rmd-removed-ink))] line-through decoration-[1.5px]'
+                    )}
+                  >
+                    {fileName(group.currentPath)}
+                  </span>
                 </div>
-                <p className="truncate text-[11px] text-muted">{group.currentPath}</p>
-                <ul className="mt-1 space-y-1">
+                <p className="truncate font-mono text-[10px] text-muted">{group.currentPath}</p>
+                <ul className="mt-1.5 space-y-1">
                   {group.matches.map((match) => (
                     <li key={match.versionId}>
                       <button
                         onClick={() => {
                           void selectFile(match.fileId).then(() => selectVersion(match.versionId));
                         }}
-                        className="w-full rounded border border-transparent px-2 py-1 text-left hover:border-edge hover:bg-surface"
+                        className="w-full rounded-md border border-transparent px-2 py-1 text-left hover:border-edge hover:bg-surface"
                       >
                         <span className="flex items-center gap-2 text-[11px] text-muted">
                           <span>{formatDate(match.capturedAt)}</span>
@@ -167,8 +181,7 @@ function SearchResultsList(): React.JSX.Element {
                           {match.isCurrent ? <Badge tone="accent">current</Badge> : null}
                         </span>
                         <span
-                          className="mt-0.5 block text-[11px] leading-snug text-ink"
-                          // Snippet text is escaped inside highlightTerms before terms are wrapped.
+                          className="mt-0.5 block text-[12px] leading-snug text-ink"
                           dangerouslySetInnerHTML={{ __html: highlightTerms(match.snippet, terms) }}
                         />
                       </button>

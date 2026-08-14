@@ -7,6 +7,7 @@
 import path from 'node:path';
 import { BrowserWindow, Menu, Tray, app, nativeImage, shell } from 'electron';
 import type { TrackingState } from '@shared/types/domain';
+import { trackingStatusLabel } from '@shared/copy';
 import { TRAY_ICON_DATA_URL } from './trayIcon';
 
 export interface WindowManagerOptions {
@@ -16,6 +17,7 @@ export interface WindowManagerOptions {
   onQuitRequested: () => void;
   onPauseToggle: () => void;
   getTrackingState: () => TrackingState;
+  getActiveFileCount?: () => number;
   openLogsFolder: () => void;
   openDataFolder: () => void;
 }
@@ -48,7 +50,7 @@ export class WindowManager {
       minWidth: 960,
       minHeight: 600,
       show: false,
-      backgroundColor: '#0f1115',
+      backgroundColor: '#f3ead9',
       title: 'Recover.MD',
       webPreferences: {
         preload: this.options.preloadPath,
@@ -117,14 +119,15 @@ export class WindowManager {
   refreshTray(): void {
     if (!this.tray) return;
     const state = this.options.getTrackingState();
-    const label = TRACKING_LABELS[state] ?? state;
+    const label = trackingStatusLabel(state, this.options.getActiveFileCount?.());
+    const pauseLabel = state === 'paused' ? 'Resume watching' : 'Pause watching';
 
     const menu = Menu.buildFromTemplate([
       { label: `Recover.MD — ${label}`, enabled: false },
       { type: 'separator' },
       { label: 'Open Recover.MD', click: () => this.show() },
       {
-        label: state === 'paused' ? 'Resume tracking' : 'Pause tracking',
+        label: pauseLabel,
         click: () => this.options.onPauseToggle()
       },
       { type: 'separator' },
@@ -143,16 +146,6 @@ export class WindowManager {
     this.tray = null;
   }
 }
-
-const TRACKING_LABELS: Record<TrackingState, string> = {
-  starting: 'starting…',
-  indexing: 'indexing…',
-  active: 'tracking',
-  paused: 'paused',
-  degraded: 'degraded',
-  unavailable: 'vault unavailable',
-  stopped: 'stopped'
-};
 
 /** Resolves a path inside the packaged app, accounting for asar unpacking. */
 export function resolveAppPath(...segments: string[]): string {

@@ -243,6 +243,8 @@ export interface VaultStatus {
   /** True when the database is open in read-only safe mode after an integrity failure. */
   safeMode: boolean;
   pendingCaptures: number;
+  /** Active (not deleted) Markdown files currently tracked in this vault. */
+  activeFileCount: number;
 }
 
 export interface RestoreRequest {

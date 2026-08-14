@@ -18,10 +18,10 @@ export function HealthBanner(): React.JSX.Element | null {
           key={issue.code}
           role={issue.severity === 'error' ? 'alert' : 'status'}
           className={cx(
-            'flex items-start gap-2 px-3 py-2 text-[12px]',
+            'flex items-start gap-2 px-4 py-2 text-[12px]',
             issue.severity === 'error'
               ? 'bg-[rgb(var(--rmd-removed-bg))] text-[rgb(var(--rmd-removed-ink))]'
-              : 'bg-amber-500/15 text-ink'
+              : 'bg-amber-700/15 text-ink'
           )}
         >
           <span aria-hidden className="font-semibold">
